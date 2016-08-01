@@ -115,6 +115,10 @@
     <Compile Include="AppRestartRecovery\RecoverySettings.cs" />
     <Compile Include="AppRestartRecovery\RestartRestrictions.cs" />
     <Compile Include="AppRestartRecovery\RestartSettings.cs" />
+    <Compile Include="Interop\NetworkList\INetworkConnectionEvents.cs" />
+    <Compile Include="Interop\NetworkList\INetworkEvents.cs" />
+    <Compile Include="Interop\NetworkList\INetworkListManagerEvents.cs" />
+    <Compile Include="Interop\SinkHelpers.cs" />
     <Compile Include="Interop\WindowMessage.cs" />
     <Compile Include="PowerManagement\PowerManagerException.cs" />
     <Compile Include="Dialogs\Common\DialogControl.cs" />

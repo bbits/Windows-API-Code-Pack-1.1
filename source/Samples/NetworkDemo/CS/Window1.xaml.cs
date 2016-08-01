@@ -1,9 +1,12 @@
 ﻿//Copyright (c) Microsoft Corporation.  All rights reserved.
 
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using System.Text;
 using Microsoft.WindowsAPICodePack.Net;
+using System.ComponentModel;
 
 namespace Microsoft.WindowsAPICodePack.Samples.NetworkDemo
 {
@@ -12,11 +15,29 @@ namespace Microsoft.WindowsAPICodePack.Samples.NetworkDemo
     /// </summary>
     public partial class Window1 : Window
     {
+        private TextBlock EventLog = new TextBlock();
+
         public Window1()
         {
             InitializeComponent();
 
             LoadNetworkConnections();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+
+            // release all COM event handlers
+            NetworkListManager.ConnectivityChanged -= NetworkListManager_ConnectivityChanged;
+
+            NetworkListManager.NetworkAdded -= NetworkListManager_NetworkAdded;
+            NetworkListManager.NetworkConnectivityChanged -= NetworkListManager_NetworkConnectivityChanged;
+            NetworkListManager.NetworkDeleted -= NetworkListManager_NetworkDeleted;
+            NetworkListManager.NetworkPropertyChanged -= NetworkListManager_NetworkPropertyChanged;
+
+            NetworkListManager.NetworkConnectionConnectivityChanged -= NetworkListManager_NetworkConnectionConnectivityChanged;
+            NetworkListManager.NetworkConnectionPropertyChanged -= NetworkListManager_NetworkConnectionPropertyChanged;
         }
 
         private void LoadNetworkConnections()
@@ -66,6 +87,83 @@ namespace Microsoft.WindowsAPICodePack.Samples.NetworkDemo
                 tabItem.Content = stackPanel2;
             }
 
+            // add events logging tab
+            ScrollViewer scroll = new ScrollViewer();
+            scroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            scroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+            scroll.CanContentScroll = true;
+            scroll.Content = EventLog;
+
+            TabItem tabItem2 = new TabItem();
+            tabItem2.Header = "Events";
+            tabControl1.Items.Add(tabItem2);
+
+            tabItem2.Content = scroll;
+
+            // add COM event handlers
+            NetworkListManager.ConnectivityChanged += NetworkListManager_ConnectivityChanged;
+
+            NetworkListManager.NetworkAdded += NetworkListManager_NetworkAdded;
+            NetworkListManager.NetworkConnectivityChanged += NetworkListManager_NetworkConnectivityChanged;
+            NetworkListManager.NetworkDeleted += NetworkListManager_NetworkDeleted;
+            NetworkListManager.NetworkPropertyChanged += NetworkListManager_NetworkPropertyChanged;
+
+            NetworkListManager.NetworkConnectionConnectivityChanged += NetworkListManager_NetworkConnectionConnectivityChanged;
+            NetworkListManager.NetworkConnectionPropertyChanged += NetworkListManager_NetworkConnectionPropertyChanged;
+        }
+
+        private void NetworkListManager_ConnectivityChanged(ConnectivityStates NewConnectivity)
+        {
+            UpdateLog(string.Format("INetworkListManagerEvents.ConnectivityChange: {0}\n", NewConnectivity));
+        }
+
+        private void NetworkListManager_NetworkAdded(Guid NetworkId)
+        {
+            var Network = NetworkListManager.GetNetwork(NetworkId);
+            var NetworkName = (Network?.Name ?? NetworkId.ToString() + " (vanished)");
+            UpdateLog(string.Format("INetworkEvents.NetworkAdded: {0}\n", NetworkName));
+        }
+
+        private void NetworkListManager_NetworkConnectivityChanged(Guid NetworkId, ConnectivityStates NewConnectivity)
+        {
+            var Network = NetworkListManager.GetNetwork(NetworkId);
+            var NetworkName = (Network?.Name ?? NetworkId.ToString() + " (vanished)");
+            UpdateLog(string.Format("INetworkEvents.NetworkConnectivityChanged: {0}, {1}\n", NetworkName, NewConnectivity));
+        }
+
+        private void NetworkListManager_NetworkDeleted(Guid NetworkId)
+        {
+            var Network = NetworkListManager.GetNetwork(NetworkId);
+            var NetworkName = (Network?.Name ?? NetworkId.ToString() + " (vanished)");
+            UpdateLog(string.Format("INetworkEvents.NetworkDeleted: {0}\n", NetworkName));
+        }
+
+        private void NetworkListManager_NetworkPropertyChanged(Guid NetworkId, NetworkPropertyChange Flags)
+        {
+            var Network = NetworkListManager.GetNetwork(NetworkId);
+            var NetworkName = (Network?.Name ?? NetworkId.ToString() + " (vanished)");
+            UpdateLog(string.Format("INetworkEvents.NetworkPropertyChanged: {0}, {1}\n", NetworkName, Flags));
+        }
+
+        private void NetworkListManager_NetworkConnectionConnectivityChanged(Guid NetworkConnectionId, ConnectivityStates NewConnectivity)
+        {
+            var NetworkConnection = NetworkListManager.GetNetworkConnection(NetworkConnectionId);
+            var NetworkConnectionName = (NetworkConnection?.ConnectionId.ToString() ?? NetworkConnectionId.ToString() + " (vanished)");
+            UpdateLog(string.Format("INetworkConnectionEvents.NetworkConnectionConnectivityChanged: {0}, {1}\n", NetworkConnectionName, NewConnectivity));
+        }
+
+        private void NetworkListManager_NetworkConnectionPropertyChanged(Guid NetworkConnectionId, NetworkConnectionPropertyChange Flags)
+        {
+            var NetworkConnection = NetworkListManager.GetNetworkConnection(NetworkConnectionId);
+            var NetworkConnectionName = (NetworkConnection?.ConnectionId.ToString() ?? NetworkConnectionId.ToString() + " (vanished)");
+            UpdateLog(string.Format("INetworkConnectionEvents.NetworkConnectionPropertyChanged: {0}, {1}\n", NetworkConnectionName, Flags));
+        }
+
+        private void UpdateLog(string Value)
+        {
+            Application.Current.Dispatcher.BeginInvoke(
+              DispatcherPriority.Background,
+              new Action(() => EventLog.Text = EventLog.Text + Value)); ;
         }
 
         private void AddProperty(string propertyName, string propertyValue, StackPanel parent)

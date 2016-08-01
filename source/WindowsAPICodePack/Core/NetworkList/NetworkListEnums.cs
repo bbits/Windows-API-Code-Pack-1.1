@@ -121,4 +121,50 @@ namespace Microsoft.WindowsAPICodePack.Net
     }
 
 
+    /// <summary>
+    /// Specifies the property of a network that has changed
+    /// </summary>
+    [Flags]
+    public enum NetworkPropertyChange
+    {
+        /// <summary>
+        /// A connection has been added or removed
+        /// </summary>
+        Connection = 1,
+
+        /// <summary>
+        /// The description has changed
+        /// </summary>
+        Description = 2,
+
+        /// <summary>
+        /// The icon has changed
+        /// </summary>
+        Icon = 8,
+
+        /// <summary>
+        /// The name has changed
+        /// </summary>
+        Name = 4,
+
+        /// <summary>
+        /// The category has changed
+        /// </summary>
+        Category = 0x10
+    }
+
+
+    /// <summary>
+    /// Specifies the property of a connection that has changed
+    /// </summary>
+    [Flags]
+    public enum NetworkConnectionPropertyChange
+    {
+        /// <summary>
+        /// The Authentication (Domain Type) of this Network Connection has changed
+        /// </summary>
+        Authentication = 1
+    }
+
+
 }
